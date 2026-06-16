@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planner de Viajes</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Planner de Viajes</h1>
+      <nav>
+        <ul>
+          <li><a href="#itinerario" class="active" data-tab="itinerario">Itinerario</a></li>
+          <li><a href="#mapa" data-tab="mapa">Mapa</a></li>
+          <li><a href="#resumen" data-tab="resumen">Resumen</a></li>
+          <li><a href="#diario" data-tab="diario">Diario</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sección Itinerario -->
+    <section id="itinerario" class="tab-content active">
+      <div class="section-header">
+        <h2>Mi Itinerario</h2>
+        <button id="add-day-btn" class="btn-primary">+ Nuevo Día</button>
+      </div>
+      <div id="itinerary-container"></div>
+    </section>
+
+    <!-- Sección Mapa -->
+    <section id="mapa" class="tab-content">
+      <div class="section-header">
+        <h2>Mapa del Viaje</h2>
+        <span class="map-hint">Haz clic en el mapa para añadir un pin</span>
+      </div>
+      <div id="map"></div>
+      <div id="pins-list" class="pins-list"></div>
+    </section>
+
+    <!-- Sección Resumen -->
+    <section id="resumen" class="tab-content">
+      <div class="section-header">
+        <h2>Resumen</h2>
+      </div>
+      <div class="calendar-wrapper">
+        <div class="calendar-nav">
+          <button id="prev-month" class="btn-icon">◀</button>
+          <h3 id="calendar-title">Agosto 2026</h3>
+          <button id="next-month" class="btn-icon">▶</button>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-weekday">Lun</div>
+          <div class="calendar-weekday">Mar</div>
+          <div class="calendar-weekday">Mié</div>
+          <div class="calendar-weekday">Jue</div>
+          <div class="calendar-weekday">Vie</div>
+          <div class="calendar-weekday">Sáb</div>
+          <div class="calendar-weekday">Dom</div>
+        </div>
+        <div id="calendar-days" class="calendar-days"></div>
+      </div>
+      <div id="day-detail" class="day-detail hidden">
+        <div class="day-detail-header">
+          <h3 id="day-detail-title">Actividades del día</h3>
+          <button id="close-day-detail" class="btn-icon">✕</button>
+        </div>
+        <ul id="day-detail-list" class="day-detail-list"></ul>
+        <button id="add-calendar-activity" class="btn-primary">+ Añadir actividad</button>
+      </div>
+    </section>
+
+    <!-- Sección Diario -->
+    <section id="diario" class="tab-content">
+      <div class="section-header">
+        <h2>Mi Diario de Viaje</h2>
+        <button id="add-entry-btn" class="btn-primary">+ Nueva Entrada</button>
+      </div>
+      <div id="diary-container"></div>
+    </section>
+  </main>
+
+  <!-- Modal para añadir actividad -->
+  <div id="activity-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="activity-modal-title">Añadir Actividad</h3>
+        <button class="btn-icon modal-close">✕</button>
+      </div>
+      <form id="activity-form">
+        <div class="form-group">
+          <label for="activity-name">Actividad</label>
+          <input type="text" id="activity-name" placeholder="Ej: 3 días en Berlín" required>
+        </div>
+        <div class="form-group">
+          <label for="activity-description">Descripción</label>
+          <textarea id="activity-description" rows="4" placeholder="Notas, lugares por visitar o detalles importantes"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="activity-duration">Duración en días</label>
+          <input type="number" id="activity-duration" min="1" max="30" value="1">
+        </div>
+        <div class="form-group">
+          <label for="activity-checklist">Checklist</label>
+          <textarea id="activity-checklist" rows="3" placeholder="Una tarea por línea, ej: comprar entradas"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="activity-icon">Ícono</label>
+          <select id="activity-icon">
+            <option value="✈️">✈️ Avión</option>
+            <option value="🏨">🏨 Hotel</option>
+            <option value="🚲">🚲 Bicicleta</option>
+            <option value="🎨">🎨 Museo</option>
+            <option value="🌷">🌷 Flores</option>
+            <option value="🍽️">🍽️ Comida</option>
+            <option value="🚶">🚶 Caminar</option>
+            <option value="📸">📸 Foto</option>
+            <option value="🛍️">🛍️ Compras</option>
+            <option value="🌊">🌊 Playa</option>
+            <option value="📍">📍 Lugar</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Añadir</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para añadir pin en el mapa -->
+  <div id="pin-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Añadir Pin</h3>
+        <button class="btn-icon pin-modal-close">✕</button>
+      </div>
+      <form id="pin-form">
+        <div class="form-group">
+          <label for="pin-name">Nombre del lugar</label>
+          <input type="text" id="pin-name" placeholder="Ej: Rijksmuseum" required>
+        </div>
+        <div class="form-group">
+          <label for="pin-date">Fecha de inicio</label>
+          <input type="date" id="pin-date" required>
+        </div>
+        <div class="form-group">
+          <label for="pin-end-date">Fecha de término</label>
+          <input type="date" id="pin-end-date" required>
+        </div>
+        <div class="form-group">
+          <label for="pin-checklist">Checklist</label>
+          <textarea id="pin-checklist" rows="3" placeholder="Una tarea por línea, ej: reservar hotel"></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Guardar Pin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lightbox para fotos -->
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close">✕</button>
+    <img id="lightbox-img" src="" alt="Foto ampliada">
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
